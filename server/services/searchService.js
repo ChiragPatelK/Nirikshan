@@ -3,7 +3,7 @@
 // ============================================================
 const repo = require('../repositories/demoRepository');
 
-function searchWorks({ query = '', state, risk, status, category, mp_id, page = 1, limit = 20 }) {
+function searchWorks({ query = '', state, district, risk, status, category, mp_id, page = 1, limit = 20 }) {
   let works = repo.getWorks();
   const q = query.toLowerCase().trim();
 
@@ -37,10 +37,12 @@ function searchWorks({ query = '', state, risk, status, category, mp_id, page = 
   if (mp_id) works = works.filter(w => w.mp_id === mp_id || (w.mp && w.mp.mp_id === mp_id));
 
   const total = works.length;
-  const start = (page - 1) * limit;
-  const paginated = works.slice(start, start + limit);
+  const p = Math.max(1, Number(page) || 1);
+  const l = Math.max(1, Number(limit) || 20);
+  const start = (p - 1) * l;
+  const paginated = works.slice(start, start + l);
 
-  return { total, page: Number(page), limit: Number(limit), results: paginated };
+  return { total, page: p, limit: l, results: paginated };
 }
 
 module.exports = { searchWorks };
