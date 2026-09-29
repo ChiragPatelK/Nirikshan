@@ -3,7 +3,21 @@ const repo = require('../repositories/demoRepository');
 
 router.get('/', (req, res) => {
   try {
-    const works = repo.getWorks();
+    const { role, state, district, mp_id } = req.query;
+    let works = repo.getWorks();
+
+    // Contextual filtering based on role/jurisdiction
+    if (role === 'MP' || mp_id) {
+      const targetMP = mp_id || 'MP001';
+      works = works.filter(w => w.mp_id === targetMP || (w.mp && w.mp.mp_id === targetMP));
+    } else if (role === 'DISTRICT' || district) {
+      const targetDistrict = (district || 'Dharwad').toLowerCase();
+      works = works.filter(w => (w.district || '').toLowerCase() === targetDistrict);
+    } else if (role === 'STATE' || state) {
+      const targetState = (state || 'Karnataka').toLowerCase();
+      works = works.filter(w => (w.state || '').toLowerCase() === targetState);
+    }
+
     const totalWorks = works.length;
     const totalSanctioned = works.reduce((s, w) => s + (w.sanctioned_amount_lakh || 0), 0);
     const totalExpenditure = works.reduce((s, w) => s + (w.total_expenditure_lakh || 0), 0);

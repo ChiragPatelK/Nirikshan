@@ -12,36 +12,43 @@ import StatesPage from './pages/StatesPage';
 import ImportPage from './pages/ImportPage';
 import ChatPage from './pages/ChatPage';
 import ErrorBoundary from './components/ErrorBoundary';
+import { RoleProvider } from './context/RoleContext';
+import RoleActionModal from './components/RoleActionModal';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="app-shell">
-        {/* Top Navigation */}
-        <Navbar />
+    <RoleProvider>
+      <BrowserRouter>
+        <div className="app-shell">
+          {/* Top Navigation Bar */}
+          <Navbar />
 
-        {/* Left Sidebar */}
-        <Sidebar />
+          {/* Left Sidebar */}
+          <Sidebar />
 
-        {/* Main Content Area */}
-        <main className="app-main">
-          <ErrorBoundary>
-            <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="/works" element={<WorksPage />} />
-            <Route path="/works/:id" element={<WorkPassportPage />} />
-            <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/vendors" element={<VendorsPage />} />
-            <Route path="/states" element={<StatesPage />} />
-            <Route path="/import" element={<ImportPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          </ErrorBoundary>
-        </main>
-      </div>
-    </BrowserRouter>
+          {/* Main Content Area */}
+          <main className="app-main">
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                <Route path="/works" element={<WorksPage />} />
+                <Route path="/works/:id" element={<WorkPassportPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/map" element={<MapPage />} />
+                <Route path="/vendors" element={<VendorsPage />} />
+                <Route path="/states" element={<StatesPage />} />
+                <Route path="/import" element={<ImportPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </ErrorBoundary>
+          </main>
+
+          {/* Interactive Role Action Modal */}
+          <RoleActionModal />
+        </div>
+      </BrowserRouter>
+    </RoleProvider>
   );
 }

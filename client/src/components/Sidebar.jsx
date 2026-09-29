@@ -13,7 +13,10 @@ import {
   Info
 } from 'lucide-react';
 
+import { useRole } from '../context/RoleContext';
+
 export default function Sidebar() {
+  const { roleConfig } = useRole();
   const navItems = [
     { to: '/', label: 'Overview', icon: LayoutDashboard },
     { to: '/works', label: 'Works Explorer', icon: FolderKanban },
@@ -85,15 +88,27 @@ export default function Sidebar() {
           style={{
             padding: '10px 12px',
             borderTop: '1px solid var(--border)',
-            fontSize: '0.7rem',
+            fontSize: '0.72rem',
             color: 'var(--muted)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 2,
+            gap: 4,
           }}
         >
-          <div><strong>MoSPI Prototype</strong> v1.0</div>
-          <div>Smart India Hackathon 2024</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: roleConfig.badgeColor,
+              }}
+            />
+            <strong style={{ color: 'var(--text)' }}>{roleConfig.shortName}</strong>
+          </div>
+          <div style={{ fontSize: '0.68rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {roleConfig.authorityTitle}
+          </div>
         </div>
       </div>
     </aside>

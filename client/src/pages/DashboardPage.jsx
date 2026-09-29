@@ -29,9 +29,11 @@ import { api } from '../services/api';
 import KPICard from '../components/KPICard';
 import RiskBadge from '../components/RiskBadge';
 import StatusBadge from '../components/StatusBadge';
+import { useRole, ROLES } from '../context/RoleContext';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { role, setRole, roleConfig, roleState, roleDistrict, roleMPId, openActionModal, refreshTrigger } = useRole();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,7 +42,14 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.getDashboard();
+      const params = {
+        role,
+        state: role === 'STATE' ? roleState : undefined,
+        district: role === 'DISTRICT' ? roleDistrict : undefined,
+        mp_id: role === 'MP' ? roleMPId : undefined,
+      };
+      Object.keys(params).forEach(k => !params[k] && delete params[k]);
+      const res = await api.getDashboard(params);
       setData(res);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard metrics');
@@ -51,7 +60,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [role, refreshTrigger]);
 
   if (loading) {
     return (
@@ -109,12 +118,98 @@ export default function DashboardPage() {
 
   return (
     <div className="page-container">
+      {/* Role Context Banner */}
+      <div
+        className="role-context-banner"
+        style={{
+          background: 'var(--surface-1)',
+          border: `1px solid ${roleConfig.badgeColor || 'var(--border)'}`,
+          borderLeft: `5px solid ${roleConfig.badgeColor || 'var(--accent)'}`,
+          borderRadius: 'var(--radius)',
+          padding: '14px 18px',
+          marginBottom: 20,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              padding: '4px 10px',
+              borderRadius: 'var(--radius)',
+              background: roleConfig.badgeColor || 'var(--accent)',
+              color: '#fff',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            {roleConfig.badge}
+          </div>
+          <div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>
+                {role === 'MP' && 'Constituency Development Portal · Dharwad (Karnataka)'}
+                {role === 'DISTRICT' && 'District Implementing Authority (IDA) · Dharwad District'}
+                {role === 'STATE' && 'State Nodal Authority (SNA) · Karnataka Planning Dept'}
+                {role === 'MINISTRY' && 'Central Ministry Oversight · National Surveillance'}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 2 }}>
+              {role === 'MP' && 'Representative: Hon\'ble Shri Pralhad Venkatesh Joshi (Lok Sabha) · Annual Quota ₹5.00 Cr'}
+              {role === 'DISTRICT' && 'Executive: Office of Deputy Commissioner / District Magistrate · Sanctions & Inspections'}
+              {role === 'STATE' && 'Coordination: Inter-district monitoring, bottleneck resolutions & state fund flow'}
+              {role === 'MINISTRY' && 'Oversight: All-India MPLADS surveillance, explainable AI risk engine & C&AG audit'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => openActionModal()}
+            style={{
+              background: role === 'MINISTRY' ? 'var(--risk-critical)' : roleConfig.badgeColor,
+              borderColor: role === 'MINISTRY' ? 'var(--risk-critical)' : roleConfig.badgeColor,
+              color: '#fff',
+              fontWeight: 700,
+            }}
+          >
+            {roleConfig.actionLabel}
+          </button>
+
+          {role !== 'MINISTRY' && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setRole('MINISTRY')}
+              title="Reset to All-India National View"
+            >
+              National View
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Page Header */}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 className="page-title">Executive Monitoring Overview</h1>
+          <h1 className="page-title">
+            {role === 'MP' && 'Constituency Works Overview'}
+            {role === 'DISTRICT' && 'District Implementation Scrutiny'}
+            {role === 'STATE' && 'State-Wide MPLADS Coordination'}
+            {role === 'MINISTRY' && 'Executive Monitoring Overview'}
+          </h1>
           <p className="page-subtitle">
-            AI-powered explainable risk surveillance for Ministry of Statistics & Programme Implementation
+            {role === 'MP' && 'Real-time tracking of recommended, sanctioned, and executed works in Dharwad constituency'}
+            {role === 'DISTRICT' && 'Physical progress verification, geotag inspections, and contractor milestone audit'}
+            {role === 'STATE' && 'State efficiency index, inter-district disparities, and bottleneck escalation status'}
+            {role === 'MINISTRY' && 'AI-powered explainable risk surveillance for Ministry of Statistics & Programme Implementation'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>

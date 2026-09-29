@@ -12,10 +12,12 @@ import {
 import { api } from '../services/api';
 import RiskBadge from '../components/RiskBadge';
 import StatusBadge from '../components/StatusBadge';
+import { useRole, ROLES } from '../context/RoleContext';
 
 export default function WorksPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { role, roleConfig, roleState, roleDistrict, roleMPId, openActionModal, refreshTrigger } = useRole();
 
   // Filters state initialized from query params
   const [query, setQuery] = useState(searchParams.get('q') || '');
@@ -24,6 +26,7 @@ export default function WorksPage() {
   const [status, setStatus] = useState(searchParams.get('status') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
+  const [roleFilterActive, setRoleFilterActive] = useState(role !== 'MINISTRY');
 
   const [worksData, setWorksData] = useState({ works: [], total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -36,7 +39,9 @@ export default function WorksPage() {
       setError(null);
       const params = {
         query,
-        state,
+        state: state || (roleFilterActive && role === 'STATE' ? roleState : undefined),
+        district: roleFilterActive && (role === 'DISTRICT' || role === 'MP') ? roleDistrict : undefined,
+        mp_id: roleFilterActive && role === 'MP' ? roleMPId : undefined,
         risk,
         status,
         category,
@@ -64,8 +69,12 @@ export default function WorksPage() {
   };
 
   useEffect(() => {
+    setRoleFilterActive(role !== 'MINISTRY');
+  }, [role]);
+
+  useEffect(() => {
     fetchWorks();
-  }, [state, risk, status, category, page]);
+  }, [state, risk, status, category, page, role, roleFilterActive, refreshTrigger]);
 
   // Sync state with URL search query param if user typed and pressed Enter or submitted
   const handleSearchSubmit = (e) => {
@@ -123,7 +132,20 @@ export default function WorksPage() {
             Catalog of sanctioned works, physical progress, financial tracking, and real-time risk scores
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => openActionModal()}
+            style={{
+              background: role === 'MINISTRY' ? 'var(--risk-critical)' : roleConfig.badgeColor,
+              borderColor: role === 'MINISTRY' ? 'var(--risk-critical)' : roleConfig.badgeColor,
+              color: '#fff',
+              fontWeight: 700,
+            }}
+          >
+            + {roleConfig.actionLabel}
+          </button>
           {hasActiveFilters && (
             <button className="btn btn-secondary btn-sm" onClick={handleResetFilters}>
               <RotateCcw size={14} /> Reset Filters
@@ -155,6 +177,59 @@ export default function WorksPage() {
           </button>
         </div>
       </div>
+
+      {/* Role Filter Status Banner */}
+      {role !== 'MINISTRY' && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 14px',
+            marginBottom: 16,
+            background: 'var(--surface-1)',
+            borderLeft: `4px solid ${roleConfig.badgeColor || 'var(--accent)'}`,
+            borderRadius: 'var(--radius)',
+            border: `1px solid var(--border)`,
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: 'var(--radius)',
+                background: roleConfig.badgeColor,
+                color: '#fff',
+              }}
+            >
+              {roleConfig.badge}
+            </span>
+            <span style={{ fontSize: '0.84rem' }}>
+              {roleFilterActive ? (
+                <>
+                  Filtered to <strong>{role === 'MP' ? 'Dharwad Constituency (Hon\'ble MP Pralhad Joshi)' : role === 'DISTRICT' ? 'Dharwad District (IDA)' : 'Karnataka State (SNA)'}</strong> ({worksData.total} works)
+                </>
+              ) : (
+                <>
+                  Viewing <strong>All India National Works</strong> ({worksData.total} works)
+                </>
+              )}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setRoleFilterActive(!roleFilterActive)}
+          >
+            {roleFilterActive ? 'View All India' : `Filter to My ${role === 'MP' ? 'Constituency' : role === 'DISTRICT' ? 'District' : 'State'}`}
+          </button>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="card mb-4" style={{ padding: 16 }}>
@@ -337,16 +412,61 @@ export default function WorksPage() {
                       <td>
                         <RiskBadge level={w.risk_level} score={w.risk_score} />
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/works/${w.internal_work_key}`);
-                          }}
-                        >
-                          Passport <ArrowRight size={13} />
-                        </button>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                          {role === 'DISTRICT' && (
+                            <button
+                              type="button"
+                              className="btn btn-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', background: 'var(--surface-2)', border: '1px solid var(--border)', fontWeight: 600 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openActionModal('INSPECT', w);
+                              }}
+                              title="Record physical inspection & verify milestone"
+                            >
+                              Inspect
+                            </button>
+                          )}
+                          {role === 'STATE' && (
+                            <button
+                              type="button"
+                              className="btn btn-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', background: 'var(--surface-2)', border: '1px solid var(--border)', fontWeight: 600 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openActionModal('ESCALATE', w);
+                              }}
+                              title="Escalate delay/anomaly to Central Ministry"
+                            >
+                              Escalate
+                            </button>
+                          )}
+                          {role === 'MINISTRY' && ['HIGH', 'CRITICAL'].includes(w.risk_level) && (
+                            <button
+                              type="button"
+                              className="btn btn-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--risk-critical)', border: '1px solid var(--risk-critical)', fontWeight: 700 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openActionModal('FREEZE', w);
+                              }}
+                              title="Freeze disbursement & order forensic audit"
+                            >
+                              Freeze
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/works/${w.internal_work_key}`);
+                            }}
+                          >
+                            Passport <ArrowRight size={13} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -29,11 +29,12 @@ function searchWorks({ query = '', state, risk, status, category, mp_id, page = 
     });
   }
 
-  if (state) works = works.filter(w => w.state === state);
+  if (state) works = works.filter(w => (w.state || '').toLowerCase() === state.toLowerCase());
+  if (district) works = works.filter(w => (w.district || '').toLowerCase() === district.toLowerCase());
   if (risk) works = works.filter(w => w.risk_level === risk);
   if (status) works = works.filter(w => w.status === status);
   if (category) works = works.filter(w => w.category === category);
-  if (mp_id) works = works.filter(w => w.mp_id === mp_id);
+  if (mp_id) works = works.filter(w => w.mp_id === mp_id || (w.mp && w.mp.mp_id === mp_id));
 
   const total = works.length;
   const start = (page - 1) * limit;
