@@ -98,16 +98,7 @@ export default function Navbar() {
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="role-dropdown-select"
-              style={{
-                padding: '5px 10px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--border)',
-                background: 'var(--surface-1)',
-                color: 'var(--text)',
-                cursor: 'pointer',
-              }}
+              aria-label="Select active stakeholder role"
             >
               <option value="MP">Members of Parliament (MP)</option>
               <option value="DISTRICT">District Authorities (DA / IDA)</option>
