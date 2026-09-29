@@ -8,6 +8,7 @@
 /* ── Theme Tokens ─────────────────────────────────────────── */
 :root,
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0A0B0D;
   --surface: #14161A;
   --surface-1: #14161A;
@@ -40,6 +41,7 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --bg: #FFFFFF;
   --surface: #F4F4F1;
   --surface-1: #F4F4F1;

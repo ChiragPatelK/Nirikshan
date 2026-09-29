@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Sun, Moon, Shield, Bell, PlusCircle, Building2, MapPin, Award, ShieldAlert } from 'lucide-react';
+import { Search, Sun, Moon, Shield, Bell, PlusCircle } from 'lucide-react';
 import { useRole, ROLES } from '../context/RoleContext';
+import RoleDropdown from './RoleDropdown';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -94,17 +95,7 @@ export default function Navbar() {
           {/* 4 Roles Switcher Selector */}
           <div className="role-selector-wrap" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)' }}>Role:</span>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="role-dropdown-select"
-              aria-label="Select active stakeholder role"
-            >
-              <option value="MP">Members of Parliament (MP)</option>
-              <option value="DISTRICT">District Authorities (DA / IDA)</option>
-              <option value="STATE">State Nodal Authorities (SNA)</option>
-              <option value="MINISTRY">The Ministry (MoSPI National)</option>
-            </select>
+            <RoleDropdown />
           </div>
 
           {/* Role Action Button */}
