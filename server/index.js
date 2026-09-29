@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -24,7 +24,28 @@ app.get("/api/status", (req, res) => {
   res.json({ mode: DEMO_MODE ? "DEMO" : "DATABASE", version: "1.0.0", appName: "NIRIKSHAN AI" });
 });
 
-app.listen(PORT, () => {
-  console.log(`NIRIKSHAN AI server running on port ${PORT}`);
-  console.log(`Mode: ${DEMO_MODE ? "DEMO (prototype data)" : "DATABASE"}`);
+// Serve frontend static build in production / Render deployment
+const clientDist = path.join(__dirname, "../client/dist");
+app.use(express.static(clientDist));
+
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "API endpoint not found" });
+  }
+  const indexHtml = path.join(clientDist, "index.html");
+  res.sendFile(indexHtml, (err) => {
+    if (err) {
+      res.status(200).send("NIRIKSHAN AI API server running. Run 'npm run build' to generate frontend bundle.");
+    }
+  });
 });
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`NIRIKSHAN AI server running on port ${PORT}`);
+    console.log(`Mode: ${DEMO_MODE ? "DEMO (prototype data)" : "DATABASE"}`);
+  });
+}
+
+module.exports = app;
+
